@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sherif's Todo List</title>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        background-color: #2c3e50; /* Dark background color */
+        color: #ecf0f1; /* Light text color */
+        margin: 0;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: fit-content;
+      }
+
+      #date-time-container {
+        margin-bottom: 20px;
+        font-size: 18px;
+        text-align: center;
+        color: #3498db; /* Blue color */
+      }
+
+      #todo-container {
+        width: 90%; /* Responsive width */
+        max-width: 400px; /* Maximum width */
+        background-color: #34495e; /* Dark container background color */
+        border-radius: 8px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      #todo-header {
+        background-color: #0b151b; /* Blue color */
+        color: #fff;
+        padding: 15px;
+        text-align: center;
+        font-size: 24px;
+      }
+
+      #todo-list {
+        list-style-type: none;
+        padding: 0;
+      }
+
+      .todo-item {
+        display: flex;
+        flex-direction: column;
+        padding: 15px;
+        border-bottom: 1px solid #2c3e50; /* Dark border color */
+        transition: background-color 0.3s ease;
+      }
+
+      .todo-item:last-child {
+        border-bottom: none;
+      }
+
+      .todo-text {
+        margin: 0;
+        color: #ecf0f1; /* Light text color */
+        font-size: 18px;
+        margin-bottom: 8px;
+      }
+
+      .todo-time {
+        color: #7f8c8d;
+        font-size: 14px;
+      }
+
+      .delete-button {
+        background-color: #fe1201b2; /* Red color */
+        color: #fff;
+        border: none;
+        padding: 8px;
+        cursor: pointer;
+        margin-top: 10px;
+        align-self: flex-end;
+        border-radius: 4px; /* Border radius added */
+        transition: background-color 0.3s ease;
+      }
+
+      #add-todo {
+        width: calc(100% - 30px);
+        margin: 15px;
+        padding: 10px;
+        border: 1px solid #2c3e50; /* Dark border color */
+        border-radius: 4px;
+        box-sizing: border-box; /* Ensure padding and border are included in the width */
+        color: #ecf0f1; /* Light text color */
+        background-color: #34495e; /* Dark input background color */
+        transition: border-color 0.3s ease, background-color 0.3s ease;
+      }
+
+      #add-todo:focus {
+        border-color: #3498db; /* Blue color on focus */
+        background-color: #2c3e50; /* Dark background color on focus */
+      }
+
+      .todo-item:hover {
+        background-color: #2c3e50; /* Dark background color on hover */
+      }
+    </style>
+  </head>
+  <body>
+    <div id="date-time-container"></div>
+
+    <div id="todo-container">
+      <div id="todo-header">Sherif's Todo List</div>
+      <ul id="todo-list"></ul>
+      <input type="text" id="add-todo" placeholder="Add a new todo" />
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const dateTimeContainer = document.getElementById(
+          "date-time-container"
+        );
+        const todoList = document.getElementById("todo-list");
+        const addTodoInput = document.getElementById("add-todo");
+
+        // Display current date and time
+        function updateDateTime() {
+          const now = new Date();
+          const options = {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "numeric",
+            minute: "numeric",
+            second: "numeric",
+            timeZoneName: "short",
+          };
+          const formattedDateTime = now.toLocaleDateString("en-US", options);
+          dateTimeContainer.textContent = `📅 ${formattedDateTime} ⏰`;
+        }
+
+        // Load todos from local storage
+        loadTodos();
+        // Display current date and time
+        updateDateTime();
+
+        addTodoInput.addEventListener("keydown", function (event) {
+          if (event.key === "Enter" && addTodoInput.value.trim() !== "") {
+            const todoText = addTodoInput.value.trim();
+            const todoTime = new Date().toLocaleString();
+            addTodoItem(todoText, todoTime);
+            saveTodoToLocal({ text: todoText, time: todoTime });
+            addTodoInput.value = "";
+          }
+        });
+
+        function addTodoItem(text, time) {
+          const todoItem = document.createElement("li");
+          todoItem.classList.add("todo-item");
+
+          const todoText = document.createElement("p");
+          todoText.classList.add("todo-text");
+          todoText.textContent = text;
+
+          const todoTime = document.createElement("p");
+          todoTime.classList.add("todo-time");
+          todoTime.textContent = `Added on: ${time}`;
+
+          const deleteButton = document.createElement("button");
+          deleteButton.classList.add("delete-button");
+          deleteButton.textContent = "Delete";
+          deleteButton.addEventListener("click", function () {
+            todoList.removeChild(todoItem);
+            removeTodoFromLocal(text);
+          });
+
+          todoItem.appendChild(todoText);
+          todoItem.appendChild(todoTime);
+          todoItem.appendChild(deleteButton);
+          todoList.appendChild(todoItem);
+        }
+
+        function saveTodoToLocal(todo) {
+          const todos = JSON.parse(localStorage.getItem("todos")) || [];
+          todos.push(todo);
+          localStorage.setItem("todos", JSON.stringify(todos));
+        }
+
+        function loadTodos() {
+          const todos = JSON.parse(localStorage.getItem("todos")) || [];
+          todos.forEach((todo) => addTodoItem(todo.text, todo.time));
+        }
+
+        function removeTodoFromLocal(todoText) {
+          const todos = JSON.parse(localStorage.getItem("todos")) || [];
+          const updatedTodos = todos.filter((todo) => todo.text !== todoText);
+          localStorage.setItem("todos", JSON.stringify(updatedTodos));
+        }
+
+        // Update date and time every second
+        setInterval(updateDateTime, 1000);
+      });
+    </script>
+  </body>
+</html>
